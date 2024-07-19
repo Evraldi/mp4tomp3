@@ -1,52 +1,64 @@
 package com.example.mp4tomp3converter
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.mp4tomp3converter.databinding.ActivityMainBinding
 import com.arthenica.mobileffmpeg.FFmpeg
 import com.arthenica.mobileffmpeg.ExecuteCallback
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var createFileLauncher: ActivityResultLauncher<Intent>
     private lateinit var selectVideoLauncher: ActivityResultLauncher<Intent>
     private var selectedVideoUri: Uri? = null
+
+    private val CHANNEL_ID = "MP4toMP3_CHANNEL"
+    private val NOTIFICATION_ID = 1
+    private val REQUEST_PERMISSION_CODE = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupActivityResultLaunchers()
+        createNotificationChannel()
+
+        // Check and request permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_PERMISSION_CODE)
+        }
 
         binding.selectButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
             selectVideoLauncher.launch(intent)
         }
+
+        setupActivityResultLaunchers()
     }
 
     private fun setupActivityResultLaunchers() {
-        createFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                result.data?.data?.let { outputUri ->
-                    selectedVideoUri?.let { inputUri ->
-                        convertMp4ToMp3(inputUri, outputUri)
-                    } ?: showToast("No video selected")
-                } ?: showToast("Failed to create output file")
-            }
-        }
-
         selectVideoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 result.data?.data?.let { uri ->
@@ -71,12 +83,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun convertMp4ToMp3(inputUri: Uri, outputUri: Uri) {
         val inputPath = getFilePathFromUri(inputUri) ?: run {
-            Toast.makeText(this, "Invalid input URI", Toast.LENGTH_SHORT).show()
+            showToast("Invalid input URI")
             return
         }
 
         val outputPath = outputUri.path ?: run {
-            Toast.makeText(this, "Invalid output URI", Toast.LENGTH_SHORT).show()
+            showToast("Invalid output URI")
             return
         }
 
@@ -90,11 +102,9 @@ class MainActivity : AppCompatActivity() {
         FFmpeg.executeAsync(command, object : ExecuteCallback {
             override fun apply(executionId: Long, returnCode: Int) {
                 runOnUiThread {
-                    if (returnCode == 0) {
-                        Toast.makeText(this@MainActivity, "Conversion successful! File saved at: $outputPath", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(this@MainActivity, "Conversion failed", Toast.LENGTH_SHORT).show()
-                    }
+                    val message = if (returnCode == 0) "Conversion successful! File saved at: $outputPath" else "Conversion failed"
+                    showToast(message)
+                    sendNotification(message)
                 }
             }
         })
@@ -115,22 +125,57 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun copyUriToTempFile(uri: Uri): String? {
-        val tempFile = File.createTempFile("temp", ".mp4", cacheDir)
-        return try {
-            contentResolver.openInputStream(uri)?.use { inputStream ->
-                FileOutputStream(tempFile).use { outputStream ->
-                    inputStream.copyTo(outputStream)
-                }
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "MP4toMP3 Notifications"
+            val descriptionText = "Notifications for MP4 to MP3 conversion status"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
             }
-            tempFile.absolutePath
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun sendNotification(message: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE // Add this flag
+        )
+
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher) // Replace with your notification icon
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.ic_launcher)) // Replace with your app icon
+            .setContentTitle("MP4 to MP3 Conversion")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+
+        with(NotificationManagerCompat.from(this)) {
+            notify(NOTIFICATION_ID, notificationBuilder.build())
         }
     }
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                // Permissions granted, proceed with the action
+            } else {
+                showToast("Permissions denied. Cannot access files.")
+            }
+        }
     }
 }
