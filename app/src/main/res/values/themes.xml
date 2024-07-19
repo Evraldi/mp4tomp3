@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.MP4ToMP3Converter" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here -->
+        <!-- For example, set primary and accent colors -->
+    </style>
+</resources>
