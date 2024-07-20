@@ -13,6 +13,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.InputType
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,12 +28,16 @@ import com.arthenica.mobileffmpeg.FFmpeg
 import com.arthenica.mobileffmpeg.ExecuteCallback
 import java.io.File
 import java.io.FileOutputStream
+import android.app.AlertDialog
+import android.content.ContentUris
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var selectVideoLauncher: ActivityResultLauncher<Intent>
     private var selectedVideoUri: Uri? = null
+    private var audioQuality: String = "320k"
+    private var filename: String = "converted_${System.currentTimeMillis()}.mp3"
 
     private val CHANNEL_ID = "MP4toMP3_CHANNEL"
     private val NOTIFICATION_ID = 1
@@ -55,6 +61,16 @@ class MainActivity : AppCompatActivity() {
             selectVideoLauncher.launch(intent)
         }
 
+        binding.selectQualityButton.setOnClickListener {
+            // Open dialog or activity to select audio quality
+            showQualitySelectionDialog()
+        }
+
+        binding.selectFilenameButton.setOnClickListener {
+            // Open dialog to input filename
+            showFilenameInputDialog()
+        }
+
         setupActivityResultLaunchers()
     }
 
@@ -75,9 +91,7 @@ class MainActivity : AppCompatActivity() {
             outputDirectory.mkdirs() // Create directory if it doesn't exist
         }
 
-        val outputFileName = "converted_${System.currentTimeMillis()}.mp3"
-        val outputFile = File(outputDirectory, outputFileName)
-
+        val outputFile = File(outputDirectory, filename)
         convertMp4ToMp3(selectedVideoUri!!, Uri.fromFile(outputFile))
     }
 
@@ -97,11 +111,14 @@ class MainActivity : AppCompatActivity() {
             outputFile.delete() // Remove the existing file if necessary
         }
 
-        val command = "-i $inputPath -b:a 320k $outputPath"
+        val command = "-i $inputPath -b:a $audioQuality $outputPath"
+
+        binding.conversionProgress.visibility = android.view.View.VISIBLE
 
         FFmpeg.executeAsync(command, object : ExecuteCallback {
             override fun apply(executionId: Long, returnCode: Int) {
                 runOnUiThread {
+                    binding.conversionProgress.visibility = android.view.View.GONE
                     val message = if (returnCode == 0) "Conversion successful! File saved at: $outputPath" else "Conversion failed"
                     showToast(message)
                     sendNotification(message)
@@ -124,6 +141,52 @@ class MainActivity : AppCompatActivity() {
             null
         }
     }
+
+    private fun showQualitySelectionDialog() {
+        val qualityOptions = arrayOf("128k", "192k", "256k", "320k")
+        val checkedItem = qualityOptions.indexOf(audioQuality)
+
+        AlertDialog.Builder(this)
+            .setTitle("Select Audio Quality")
+            .setSingleChoiceItems(qualityOptions, checkedItem) { _, which ->
+                audioQuality = qualityOptions[which]
+            }
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                showToast("Selected Quality: $audioQuality")
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
+    }
+
+
+    private fun showFilenameInputDialog() {
+        val editText = EditText(this)
+        editText.inputType = InputType.TYPE_CLASS_TEXT
+
+        AlertDialog.Builder(this)
+            .setTitle("Enter Filename")
+            .setView(editText)
+            .setPositiveButton("OK") { dialog, _ ->
+                val inputFilename = editText.text.toString().trim()
+                if (inputFilename.isNotEmpty()) {
+                    filename = "${inputFilename}.mp3"
+                    showToast("Filename set to: $filename")
+                } else {
+                    showToast("Filename cannot be empty")
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
+    }
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
