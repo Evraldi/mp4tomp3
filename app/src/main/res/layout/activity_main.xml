@@ -1,23 +1,70 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
         <!-- Declare your ViewModel or variables here -->
     </data>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:padding="16dp"
         tools:context=".MainActivity">
 
+        <!-- Select MP4 File Button -->
         <Button
             android:id="@+id/selectButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Select MP4 File"
+            style="@style/CustomButtonStyle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/conversionProgress"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintHorizontal_bias="0.5" />
+
+        <!-- Conversion Progress -->
+        <ProgressBar
+            android:id="@+id/conversionProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Select MP4 File" />
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectButton"
+            app:layout_constraintBottom_toTopOf="@id/selectQualityButton"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintHorizontal_bias="0.5" />
 
-        <!-- Add other UI elements as needed -->
+        <!-- Select Audio Quality Button -->
+        <Button
+            android:id="@+id/selectQualityButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Select Audio Quality"
+            style="@style/CustomButtonStyle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/conversionProgress"
+            app:layout_constraintBottom_toTopOf="@id/selectFilenameButton"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintHorizontal_bias="0.5" />
 
-    </LinearLayout>
+        <!-- Enter Filename Button -->
+        <Button
+            android:id="@+id/selectFilenameButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Enter Filename for the output file (optional)"
+            style="@style/CustomButtonStyle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectQualityButton"
+            android:layout_marginTop="16dp"
+            app:layout_constraintHorizontal_bias="0.5" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation("com.arthenica:mobile-ffmpeg-full:4.4")
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
