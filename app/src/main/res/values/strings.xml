@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">MP4ToMP3Converter</string>
+    <string name="select_audio_quality">Select Audio Quality</string>
+    <string name="select_mp4_file">Select MP4 File</string>
+    <string name="enter_filename_for_the_output_file_optional">Enter Filename for the output file (optional)</string>
 </resources>

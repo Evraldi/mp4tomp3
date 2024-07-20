@@ -15,16 +15,17 @@
         <!-- Select MP4 File Button -->
         <Button
             android:id="@+id/selectButton"
+            style="@style/CustomButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Select MP4 File"
-            style="@style/CustomButtonStyle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/conversionProgress"
             android:layout_marginBottom="16dp"
-            app:layout_constraintHorizontal_bias="0.5" />
+            android:text="@string/select_mp4_file"
+            android:textColor="#212121"
+            app:layout_constraintBottom_toTopOf="@id/conversionProgress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Conversion Progress -->
         <ProgressBar
@@ -42,29 +43,31 @@
         <!-- Select Audio Quality Button -->
         <Button
             android:id="@+id/selectQualityButton"
+            style="@style/CustomButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Select Audio Quality"
-            style="@style/CustomButtonStyle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/conversionProgress"
-            app:layout_constraintBottom_toTopOf="@id/selectFilenameButton"
             android:layout_marginBottom="16dp"
-            app:layout_constraintHorizontal_bias="0.5" />
+            android:text="@string/select_audio_quality"
+            android:textColor="#212121"
+            app:layout_constraintBottom_toTopOf="@id/selectFilenameButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/conversionProgress" />
 
         <!-- Enter Filename Button -->
         <Button
             android:id="@+id/selectFilenameButton"
+            style="@style/CustomButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Enter Filename for the output file (optional)"
-            style="@style/CustomButtonStyle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/selectQualityButton"
             android:layout_marginTop="16dp"
-            app:layout_constraintHorizontal_bias="0.5" />
+            android:text="@string/enter_filename_for_the_output_file_optional"
+            android:textColor="#212121"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectQualityButton" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
